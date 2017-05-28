@@ -6,4 +6,5 @@
     <string name="folder_name">Selfies</string>
     <string name="congratulations_message">Congratulations, you took a selfie!</string>
     <string name="taken_on">Taken on %1$s</string>
+    <string name="error_parse_name_exception">Unable to parse some photos</string>
 </resources>

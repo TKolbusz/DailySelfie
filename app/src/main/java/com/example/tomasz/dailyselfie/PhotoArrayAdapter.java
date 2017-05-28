@@ -13,14 +13,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
 
-public class PhotoArrayAdapter extends ArrayAdapter<String>
+class PhotoArrayAdapter extends ArrayAdapter<String>
 {
     private final Activity activity;
-    private final PhotoData[] photoData;
+    private final List<PhotoData> photoData;
 
-    public PhotoArrayAdapter(@NonNull Activity activity, PhotoData[] photoData, String[] photoNames)
+    PhotoArrayAdapter(@NonNull Activity activity, List<PhotoData> photoData, List<String> photoNames)
     {
         super(activity, R.layout.listview, photoNames);
 
@@ -28,9 +29,9 @@ public class PhotoArrayAdapter extends ArrayAdapter<String>
         this.photoData = photoData;
     }
 
-    public Uri getImageUriFromPosition(int position)
+    Uri getImageUriFromPosition(int position)
     {
-        return photoData[position].getImageUri();
+        return photoData.get(position).getImageUri();
     }
 
     @NonNull
@@ -55,12 +56,15 @@ public class PhotoArrayAdapter extends ArrayAdapter<String>
             holder = (ViewHolder) rowView.getTag();
 
         SimpleDateFormat sdf = new SimpleDateFormat("h:mm:ss dd-M-yyyy", Locale.US);
-        String dateString = sdf.format(photoData[position].getTimeTaken().getTime());
+        PhotoData data = photoData.get(position);
+        String dateString = sdf.format(data.getTimeTaken().getTime());
 
-        holder.getTitleText().setText(photoData[position].getPhotoName());
-        holder.getPhoto().setImageURI(photoData[position].getImageUri());
+        holder.getTitleText().setText(data.getPhotoName());
+        holder.getPhoto().setImageURI(data.getImageUri());
         holder.getDescription().setText(String.format(activity.getString(R.string.taken_on),dateString));
 
         return rowView;
     }
+
+
 }

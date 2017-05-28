@@ -28,9 +28,11 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
@@ -41,7 +43,7 @@ public class MainActivity extends AppCompatActivity
     private static final int REQUEST_CODE_ALARM = 0x1;
     private static final int REQUEST_CODE_ACTIVITY = 0x3;
     private static final int REQUEST_CODE_PERMISSION = 0x5;
-    private final int ALARM_INTERVAL = 30 * 1000; // 30 seconds
+    private final int ALARM_INTERVAL = 2 * 60 * 1000; // 2 mins
     private PhotoArrayAdapter photoArrayAdapter;
 
     @Override
@@ -80,11 +82,19 @@ public class MainActivity extends AppCompatActivity
         Intent notificationReceiverIntent = new Intent(this, NotificationPublisher.class);
         notificationReceiverIntent.putExtra(NOTIFICATION_ID, REQUEST_CODE_ALARM);
         notificationReceiverIntent.putExtra(NOTIFICATION, notification);
-        PendingIntent alarmIntent = PendingIntent.getBroadcast(this, REQUEST_CODE_ALARM, notificationReceiverIntent, PendingIntent
-                .FLAG_UPDATE_CURRENT);
+        PendingIntent alarmIntent = PendingIntent.getBroadcast(
+                this,
+                REQUEST_CODE_ALARM,
+                notificationReceiverIntent,
+                PendingIntent                .FLAG_UPDATE_CURRENT
+        );
 
         // set up repeating alarm to repeat
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + ALARM_INTERVAL, ALARM_INTERVAL, alarmIntent);
+        alarmManager.setRepeating(
+                AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis() + ALARM_INTERVAL,
+                ALARM_INTERVAL, alarmIntent
+        );
     }
 
     private void setupListView()
@@ -94,21 +104,25 @@ public class MainActivity extends AppCompatActivity
         File[] photos = photoDir.listFiles();
         if (photos != null)
         {
-            PhotoData[] photoData = new PhotoData[photos.length];
-            String[] photoNames = new String[photos.length];
+            List<String> photoNames = new ArrayList<>();
+            List<PhotoData> photoData = new ArrayList<>();
 
-            for (int i = 0; i < photos.length; i++)
+            for (File photo : photos)
             {
+                String photoName = photo.getName();
                 //remove extension
-                String photoName = photos[i].getName();
-                photoNames[i] = photoName;
                 String fileNameWithOutExt = photoName.replaceFirst("[.][^.]+$", "");
-                // prone to exceptions if someone renames a file
-                long timeInMillis = Long.parseLong(fileNameWithOutExt);
-                Calendar cal = Calendar.getInstance();
-                cal.setTimeInMillis(timeInMillis);
-
-                photoData[i] = new PhotoData(cal, photoName, Uri.fromFile(photos[i]));
+                try
+                {
+                    long timeInMillis = Long.parseLong(fileNameWithOutExt);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTimeInMillis(timeInMillis);
+                    photoNames.add(fileNameWithOutExt);
+                    photoData.add(new PhotoData(cal, photoName, Uri.fromFile(photo)));
+                } catch (Exception e)
+                {
+                    Toast.makeText(MainActivity.this, getString(R.string.error_parse_name_exception), Toast.LENGTH_SHORT).show();
+                }
             }
 
             ListView listView = (ListView) findViewById(R.id.list_view);
@@ -173,9 +187,10 @@ public class MainActivity extends AppCompatActivity
                 }
             }
             else
-                {
-                    ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_CODE_PERMISSION);
-                }
+            {
+                //request permission if needed
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_PERMISSION);
+            }
         }
         return super.onOptionsItemSelected(item);
     }
